@@ -1,6 +1,7 @@
 import "./App.css";
 import React from "react";
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 
 function App() {
   const [coupon, setCoupon] = useState(null);
@@ -28,22 +29,10 @@ function App() {
     }
   }, [timeLeft]);
 
-  // function claimCoupon(e) {
-  //   e.preventDefault();
-  //   const newCoupon = "COUPON123"; // Replace with dynamically generated coupon
-  //   const expiryTime = Date.now() + 60 * 60 * 1000; // 1 hour from now
-
-  //   localStorage.setItem("coupon", newCoupon);
-  //   localStorage.setItem("couponExpiry", expiryTime.toString());
-
-  //   setCoupon(newCoupon);
-  //   setTimeLeft(60 * 60);
-  // }
-
   function claimCoupon(e) {
     e.preventDefault();
 
-    fetch("https://yash13233.pythonanywhere.com/claim/")
+    fetch("http://127.0.0.1:8000/claim/")
       .then((response) => response.json())
       .then((data) => {
         if (data.coupon_code) {
@@ -51,11 +40,12 @@ function App() {
           localStorage.setItem("couponExpiry", Date.now() + 60 * 60 * 1000); // 1 hour expiry
           setCoupon(data.coupon_code);
           setTimeLeft(60 * 60); // 1 hour countdown
+          toast.success("coupon claim successfully");
         } else {
-          alert(data.message);
+          toast.error(data.message);
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => toast.error("something wrong"));
   }
 
   return (
