@@ -43,7 +43,7 @@ function App() {
   function claimCoupon(e) {
     e.preventDefault();
 
-    fetch("http://127.0.0.1:8000/claim/")
+    fetch("https://yash13233.pythonanywhere.com/claim/")
       .then((response) => response.json())
       .then((data) => {
         if (data.coupon_code) {
