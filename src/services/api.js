@@ -1,11 +1,14 @@
 import axios from "axios";
 
+// ----------------- Base URLs from .env -------------------
+const BASE_URL = import.meta.env.VITE_BACKEND_URL; // e.g., https://your-backend.onrender.com/api
+
 // ----------------- Transaction API -------------------
 const TransactionAPI = axios.create({
-  baseURL: "http://localhost:5000/api/transactions",
+  baseURL: `${BASE_URL}/transactions`, // Full Transaction API base URL
 });
 
-// Transaction APIs...
+// Transaction APIs
 export const getTransactions = async () => {
   try {
     const res = await TransactionAPI.get("/");
@@ -45,10 +48,10 @@ export const updateTransaction = async (id, transaction) => {
 
 // ----------------- Budget API -------------------
 const BudgetAPI = axios.create({
-  baseURL: "http://localhost:5000/api/category-budget",
+  baseURL: `${BASE_URL}/category-budget`, // Budget API base URL
 });
 
-// Get Budgets
+// Budget APIs
 export const getBudgets = async () => {
   try {
     const res = await BudgetAPI.get("/");
@@ -61,7 +64,7 @@ export const getBudgets = async () => {
 
 export const addBudget = async (budgetData) => {
   try {
-    const response = await BudgetAPI.post("/", budgetData); // Use BudgetAPI
+    const response = await BudgetAPI.post("/", budgetData);
     return response.data;
   } catch (error) {
     console.error("Error adding budget:", error);
@@ -69,7 +72,6 @@ export const addBudget = async (budgetData) => {
   }
 };
 
-// Delete Budget
 export const deleteBudget = async (id) => {
   try {
     const res = await BudgetAPI.delete(`/${id}`);
@@ -80,7 +82,6 @@ export const deleteBudget = async (id) => {
   }
 };
 
-// Update Budget
 export const updateBudget = async (id, updatedData) => {
   try {
     const res = await BudgetAPI.put(`/${id}`, updatedData);
