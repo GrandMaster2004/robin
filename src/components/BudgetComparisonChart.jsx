@@ -9,21 +9,22 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axios from "axios";
-import dayjs from "dayjs";
+const BudgetComparisonChart = () => {
+  const currentDate = new Date();
+  const month = currentDate.getMonth() + 1; // JavaScript months are 0-based
+  const year = currentDate.getFullYear();
 
-const BudgetComparisonChart = ({
-  month = dayjs().month() + 1,
-  year = dayjs().year(),
-}) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchComparison = async () => {
       try {
-        // Hardcoded local API endpoints
+        // Fetch budgets
         const budgetsRes = await axios.get(
           "http://localhost:5000/api/category-budget"
         );
+
+        // Fetch transactions based on current month/year
         const transactionsRes = await axios.get(
           `http://localhost:5000/api/transactions?month=${month}&year=${year}`
         );
@@ -31,7 +32,7 @@ const BudgetComparisonChart = ({
         // Merge budgets & transactions
         const mergedData = budgetsRes.data.map((budget) => {
           const actual = transactionsRes.data
-            .filter((t) => t.category === budget.category) // Only check category
+            .filter((t) => t.category === budget.category) // Match category
             .reduce((sum, t) => sum + Number(t.amount), 0);
 
           return {
@@ -52,7 +53,6 @@ const BudgetComparisonChart = ({
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-        
       <BarChart data={data}>
         <XAxis dataKey="category" />
         <YAxis />
