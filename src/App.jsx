@@ -1,72 +1,136 @@
-import "./App.css";
-import React from "react";
+import { Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import TransactionForm from "./components/TransactionForm";
+import TransactionList from "./components/TransactionList";
+import { getTransactions, getBudgets } from "./services/api";
+import "./App.css";
+import ResponsiveAppBar from "./components/ResponsiveAppBar";
+import Dashboard from "./pages/Dashboard";
+import Charts from "./pages/Charts";
+import CategoryExpensesPieChart from "./components/CategoryExpensesPieChart";
+import BudgetForm from "./components/BudgetForm";
+import BudgetList from "./components/BudgetList";
+import BudgetComparisonChart from "./components/BudgetComparisonChart";
+import { Typography } from "@mui/material";
 
-function App() {
-  const [coupon, setCoupon] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(0);
+export default function App() {
+  const [transactions, setTransactions] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  // Fetch all transactions
+  const fetchTransactions = async () => {
+    const data = await getTransactions();
+    setTransactions(data);
+  };
+
+  // Fetch all budgets
+  const fetchBudgets = async () => {
+    try {
+      const data = await getBudgets();
+      setBudgets(data);
+    } catch (error) {
+      console.error("Error fetching budgets:", error);
+    }
+  };
 
   useEffect(() => {
-    const storedCoupon = localStorage.getItem("coupon");
-    const expiry = localStorage.getItem("couponExpiry");
-
-    if (storedCoupon && expiry && Date.now() < Number(expiry)) {
-      setCoupon(storedCoupon);
-      setTimeLeft(Math.floor((Number(expiry) - Date.now()) / 1000));
-    } else {
-      localStorage.removeItem("coupon");
-      localStorage.removeItem("couponExpiry");
-    }
+    fetchTransactions();
+    fetchBudgets();
   }, []);
 
+  // Handle editing transaction
+  const handleEdit = (transaction) => {
+    setSelectedTransaction(transaction);
+  };
+
+  // Clear selected transaction
+  const clearSelected = () => {
+    setSelectedTransaction(null);
+  };
+
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [timeLeft]);
-
-  function claimCoupon(e) {
-    e.preventDefault();
-
-    fetch("https://yash13233.pythonanywhere.com/claim/")
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.coupon_code) {
-          localStorage.setItem("coupon", data.coupon_code);
-          localStorage.setItem("couponExpiry", Date.now() + 60 * 60 * 1000); // 1 hour expiry
-          setCoupon(data.coupon_code);
-          setTimeLeft(60 * 60); // 1 hour countdown
-          toast.success("coupon claim successfully");
-        } else {
-          toast.error(data.message);
-        }
-      })
-      .catch((error) => toast.error("something wrong"));
-  }
+    fetchBudgets();
+  }, []);
 
   return (
     <>
-      <h1>
-        {coupon
-          ? "Coupon allotted successfully"
-          : "Click Here to Claim Your Coupon"}
-      </h1>
-      <div className="card">
-        {coupon ? (
-          <p>
-            Time left: {Math.floor(timeLeft / 60)}:
-            {(timeLeft % 60).toString().padStart(2, "0")}
-          </p>
-        ) : (
-          <button onClick={claimCoupon}>Claim It</button>
-        )}
-      </div>
+      <ResponsiveAppBar />
+
+      <Routes>
+        {/* Dashboard Route */}
+        <Route
+          path="/dashboard"
+          element={
+            <div className="container1">
+              <Dashboard />
+            </div>
+          }
+        />
+
+        {/* Charts Route */}
+        <Route
+          path="/charts"
+          element={
+            <div className="container1">
+              <Charts />
+            </div>
+          }
+        />
+
+        {/* Category Pie Chart */}
+        <Route
+          path="/categories"
+          element={
+            <div className="container1">
+              <CategoryExpensesPieChart />
+            </div>
+          }
+        />
+
+        {/* Budget Form Route */}
+        <Route
+          path="/setbudget"
+          element={
+            <div className="container2">
+              <BudgetForm onBudgetAdded={fetchBudgets} />
+              <div style={{ marginTop: "15px", marginBottom: "15px" }}>
+                <BudgetList />
+              </div>
+              <div>
+                <Typography variant="h5" gutterBottom>
+                  Budget vs Actual Comparison Chart
+                </Typography>
+                <BudgetComparisonChart />
+              </div>
+            </div>
+          }
+        />
+
+        {/* Transaction Manager - Home */}
+        <Route
+          path="/"
+          element={
+            <div className="container1">
+              <h1>Transaction Manager</h1>
+
+              {/* Transaction Form */}
+              <TransactionForm
+                selectedTransaction={selectedTransaction}
+                refreshData={fetchTransactions}
+                clearSelected={clearSelected}
+              />
+
+              {/* Transaction List */}
+              <TransactionList
+                transactions={transactions}
+                refreshData={fetchTransactions}
+                handleEdit={handleEdit}
+              />
+            </div>
+          }
+        />
+      </Routes>
     </>
   );
 }
-
-export default App;
