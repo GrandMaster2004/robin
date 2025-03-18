@@ -7,32 +7,42 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
+import {
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Box,
+} from "@mui/material";
 import axios from "axios";
+
 const BudgetComparisonChart = () => {
   const currentDate = new Date();
-  const month = currentDate.getMonth() + 1; // JavaScript months are 0-based
+  const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
 
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchComparison = async () => {
       try {
-        // Fetch budgets
         const budgetsRes = await axios.get(
-          "http://localhost:5000/api/category-budget"
+          `${import.meta.env.VITE_BACKEND_URL}/category-budget`
         );
 
-        // Fetch transactions based on current month/year
         const transactionsRes = await axios.get(
-          `http://localhost:5000/api/transactions?month=${month}&year=${year}`
+          `${
+            import.meta.env.VITE_BACKEND_URL
+          }/transactions?month=${month}&year=${year}`
         );
 
-        // Merge budgets & transactions
         const mergedData = budgetsRes.data.map((budget) => {
           const actual = transactionsRes.data
-            .filter((t) => t.category === budget.category) // Match category
+            .filter((t) => t.category === budget.category)
             .reduce((sum, t) => sum + Number(t.amount), 0);
 
           return {
@@ -43,8 +53,12 @@ const BudgetComparisonChart = () => {
         });
 
         setData(mergedData);
+        setError("");
       } catch (err) {
         console.error("Error fetching comparison data:", err);
+        setError("Failed to fetch budget comparison data.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -52,16 +66,47 @@ const BudgetComparisonChart = () => {
   }, [month, year]);
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
-        <XAxis dataKey="category" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="Budgeted" fill="#8884d8" />
-        <Bar dataKey="Actual" fill="#82ca9d" />
-      </BarChart>
-    </ResponsiveContainer>
+    <Card
+      sx={{
+        width: "95%",
+        margin: "1.5rem auto",
+        padding: "1rem",
+        boxShadow: 3,
+        borderRadius: "12px",
+      }}
+    >
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Budget vs Actual Comparison
+        </Typography>
+
+        {loading ? (
+          <Box display="flex" justifyContent="center" my={4}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Typography color="error" textAlign="center">
+            {error}
+          </Typography>
+        ) : data.length === 0 ? (
+          <Typography textAlign="center">
+            No budget comparison data available.
+          </Typography>
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Budgeted" fill="#8884d8" />
+              <Bar dataKey="Actual" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

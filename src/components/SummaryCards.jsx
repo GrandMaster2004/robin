@@ -18,15 +18,29 @@ const SummaryCards = () => {
     const fetchSummaryData = async () => {
       try {
         const [totalRes, categoryRes, recentRes] = await Promise.all([
-          axios.get("/api/transactions/total-expenses"),
-          axios.get("/api/transactions/category-breakdown"),
-          axios.get("/api/transactions/recent"),
+          axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}/transactions/total-expenses`
+          ),
+          axios.get(
+            `${
+              import.meta.env.VITE_BACKEND_URL
+            }/transactions/category-breakdown`
+          ),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/transactions/recent`),
         ]);
 
-        setTotalExpenses(totalRes.data.totalExpense);
-        console.log(totalRes.data.totalExpense);
+        console.log("Total Expenses:", totalRes.data);
+        console.log("Category Breakdown:", categoryRes.data);
+        console.log("Recent Transaction:", recentRes.data);
 
-        setCategoryBreakdown(categoryRes.data);
+        setTotalExpenses(totalRes.data.totalExpense);
+
+        // Defensive check: Ensure it's an array
+        const categories = Array.isArray(categoryRes.data)
+          ? categoryRes.data
+          : [];
+        setCategoryBreakdown(categories);
+
         setRecentTransaction(recentRes.data);
       } catch (error) {
         console.error("Error fetching summary data:", error);
@@ -52,25 +66,30 @@ const SummaryCards = () => {
           </CardContent>
         </Card>
       </Grid>
+
       <Grid item xs={12} md={4}>
         <Card>
           <CardContent>
             <Typography variant="h6">Category Breakdown</Typography>
-            {categoryBreakdown.map((category) => (
-              <Typography key={category.category || index}>
-                {category.category}: ${category.amount}
-              </Typography>
-            ))}
+            {categoryBreakdown.length > 0 ? (
+              categoryBreakdown.map((category, index) => (
+                <Typography key={index}>
+                  {category.category}: ${category.amount}
+                </Typography>
+              ))
+            ) : (
+              <Typography>No data</Typography>
+            )}
           </CardContent>
         </Card>
       </Grid>
+
       <Grid item xs={12} md={4}>
         <Card>
           <CardContent>
             <Typography variant="h6">Most Recent Transaction</Typography>
             {recentTransaction ? (
               <>
-                {/* <Typography>{recentTransaction.description}</Typography> */}
                 <Typography>${recentTransaction.amount}</Typography>
                 <Typography>
                   {new Date(recentTransaction.date).toLocaleDateString()}

@@ -35,14 +35,15 @@ const DataInsights = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/transactions");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/transactions`
+        );
         const data = res.data;
         setTransactions(data);
 
         // Monthly Trend Data
         const monthly = {};
         const category = {};
-
         let yearlyTotal = 0;
 
         data.forEach((t) => {
@@ -77,30 +78,28 @@ const DataInsights = () => {
         console.error("Error fetching data insights:", err);
       }
     };
-    console.log(monthlyData);
 
     fetchData();
   }, []);
-
   return (
-    <Grid container spacing={4} >
+    <Grid container spacing={4}>
       <Grid item xs={12}>
         <Typography variant="h4" gutterBottom></Typography>
       </Grid>
 
       <Grid item xs={12} md={6}>
-        <Card height={350}>
-          {/* <CardContent> */}
-          <MonthlyExpensesChart text="Monthly Spending Trend" />
-          {/* </CardContent> */}
-        </Card>
+        {/* <Card height={350}> */}
+        {/* <CardContent> */}
+        <MonthlyExpensesChart text="Monthly Spending Trend" />
+        {/* </CardContent> */}
+        {/* </Card> */}
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={6} topmargin={"135px"} margin={"15px 0 0 0"}>
         <Card>
           <CardContent>
             <Typography variant="h6">Top Spending Categories</Typography>
-            <ResponsiveContainer width="100%" height={455}>
+            <ResponsiveContainer width="100%" height={435}>
               <PieChart>
                 <Pie
                   data={categoryData}
